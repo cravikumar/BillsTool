@@ -1,1 +1,136 @@
-test
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Maintenance Reminder Tool</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        button { padding: 6px 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h2>📲 Maintenance Reminder Tool (iPhone Fixed)</h2>
+
+<input type="file" id="csvFile" accept=".csv" />
+<button id="loadBtn">Load CSV</button>
+
+<table id="dataTable">
+    <thead>
+        <tr>
+            <th>Phone</th>
+            <th>Flat</th>
+            <th>Amount</th>
+            <th>Note</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Default test row -->
+        <tr>
+            <td>9791440009</td>
+            <td>101</td>
+            <td>1500</td>
+            <td>Flat101-Apr</td>
+            <td>
+                <button onclick="sendWhatsApp('9791440009','101','1500','Flat101-Apr')">
+                    Send Reminder
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<script>
+function sendWhatsApp(phone, flat, amount, note) {
+
+    let message =
+`Hi,
+Please pay ₹${amount} for maintenance.
+
+👉 Pay instantly (Android):
+upi://pay?pa=9791440009@upi&pn=GKHeights&am=${amount}&cu=INR&tn=${note}
+
+UPI ID: 9791440009@upi
+Amount: ₹${amount}
+Note: ${note}
+
+(Google Pay / PhonePe / BHIM)
+
+Thanks`;
+
+    let encodedMsg = encodeURIComponent(message);
+    let url = `https://wa.me/91${phone}?text=${encodedMsg}`;
+
+    window.open(url, '_blank');
+}
+
+$(document).ready(function () {
+
+    $("#loadBtn").click(function () {
+        let fileInput = document.getElementById("csvFile");
+
+        if (!fileInput.files.length) {
+            alert("Please select a CSV file first");
+            return;
+        }
+
+        let file = fileInput.files[0];
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+            try {
+                let text = e.target.result.trim();
+                let rows = text.split(/\r?\n/);
+
+                let tableBody = $("#dataTable tbody");
+                tableBody.empty();
+
+                for (let i = 1; i < rows.length; i++) {
+                    let cols = rows[i].split(",");
+
+                    if (cols.length < 4) continue;
+
+                    let phone = cols[0].trim();
+                    let flat = cols[1].trim();
+                    let amount = cols[2].trim();
+                    let note = cols[3].trim();
+
+                    let row = `
+<tr>
+<td>${phone}</td>
+<td>${flat}</td>
+<td>${amount}</td>
+<td>${note}</td>
+<td>
+<button onclick="sendWhatsApp('${phone}','${flat}','${amount}','${note}')">
+Send Reminder
+</button>
+</td>
+</tr>`;
+
+                    tableBody.append(row);
+                }
+
+                alert("CSV Loaded Successfully ✅");
+
+            } catch (err) {
+                alert("Error loading CSV: " + err);
+            }
+        };
+
+        reader.onerror = function () {
+            alert("Error reading file");
+        };
+
+        reader.readAsText(file);
+    });
+
+});
+</script>
+
+</body>
+</html>
